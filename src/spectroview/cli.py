@@ -42,15 +42,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if args.path is None:
-        parser.error("path argument is required")
+    if args.info:
+        if args.path is None:
+            print("error: --info requires a file path", file=sys.stderr)
+            return 1
+        if not args.path.exists():
+            print(f"error: file not found: {args.path}", file=sys.stderr)
+            return 1
+        return _print_info(args.path)
 
-    if not args.path.exists():
+    if args.path is not None and not args.path.exists():
         print(f"error: file not found: {args.path}", file=sys.stderr)
         return 1
-
-    if args.info:
-        return _print_info(args.path)
 
     from spectroview.gui.app import run_gui
 

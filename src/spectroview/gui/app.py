@@ -11,9 +11,12 @@ from spectroview.gui.main_window import MainWindow
 from spectroview.io import open_cube
 
 
-def run_gui(path: Path) -> int:
-    cube = open_cube(path)
+def run_gui(path: Path | None) -> int:
     app = QApplication(sys.argv)
-    window = MainWindow(cube)
+    if path is not None:
+        cube = open_cube(path)
+        window = MainWindow(cube)
+    else:
+        window = MainWindow()
     window.show()
     return app.exec()
