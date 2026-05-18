@@ -24,6 +24,10 @@ _FULCHER_BAND = (590.0, 650.0)
 
 _SEPARATOR_COLS = 3
 
+# Percentile limits for per-band independent normalization in the Balmer composite.
+_BALMER_NORM_LO_PCT: float = 5.0
+_BALMER_NORM_HI_PCT: float = 99.5
+
 
 @dataclass(frozen=True)
 class BandSlice:
@@ -51,12 +55,35 @@ def extract_region_cube(
     return intensity[:, mask], wavelength[mask]
 
 
+def _normalize_band(band: np.ndarray) -> np.ndarray:
+    """Normalize a (n_frames, n_wl) subimage to [0, 1] using percentile clipping.
+
+    Each call operates on a single band in isolation so that dim lines are not
+    swamped by brighter neighbours in the Balmer composite.  Safe against flat
+    data, all-NaN input, and empty arrays.
+    """
+    if band.size == 0:
+        return np.zeros_like(band, dtype=float)
+    finite = band[np.isfinite(band)]
+    if finite.size == 0:
+        return np.zeros_like(band, dtype=float)
+    vlo = float(np.percentile(finite, _BALMER_NORM_LO_PCT))
+    vhi = float(np.percentile(finite, _BALMER_NORM_HI_PCT))
+    if vhi <= vlo:
+        return np.zeros_like(band, dtype=float)
+    out = (band.astype(float) - vlo) / (vhi - vlo)
+    return np.clip(out, 0.0, 1.0)
+
+
 def build_balmer_composite(
     intensity: np.ndarray,
     wavelength: np.ndarray,
 ) -> tuple[np.ndarray, list[BandSlice]]:
     """
     Build horizontal composite | Hδ | Hγ | Hβ | Hα | with blank separator columns.
+
+    Each Balmer window is normalized independently to [0, 1] before concatenation
+    so that weak lines (Hδ, Hγ) are as visible as strong lines (Hα).
     """
     parts: list[np.ndarray] = []
     bands: list[BandSlice] = []
@@ -72,7 +99,7 @@ def build_balmer_composite(
             parts.append(separator)
             col += _SEPARATOR_COLS
         col_start = col
-        parts.append(band)
+        parts.append(_normalize_band(band))
         col += band.shape[1]
         bands.append(BandSlice(col_start, col, label))
 
