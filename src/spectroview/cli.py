@@ -55,9 +55,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: file not found: {args.path}", file=sys.stderr)
         return 1
 
+    from spectroview.examples import get_example_cube_path
     from spectroview.gui.app import run_gui
 
-    return run_gui(args.path)
+    path = args.path if args.path is not None else get_example_cube_path()
+    return run_gui(path)
 
 
 if __name__ == "__main__":

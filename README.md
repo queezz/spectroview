@@ -12,19 +12,40 @@ Lightweight viewer and plotting tools for [SpectroCube](https://github.com/queez
 
 ## Usage
 
-Print metadata:
+Launch the GUI with the bundled demo dataset:
 
 ```bash
-spectroview --info path/to/file_spectrocube.nc
+spectroview
 ```
 
-Open the GUI:
+Open a specific file:
 
 ```bash
 spectroview path/to/file_spectrocube.nc
 ```
 
+Print file metadata (no GUI):
+
+```bash
+spectroview --info path/to/file_spectrocube.nc
+```
+
 The GUI shows cube metadata, a frame slider, a spectrum plot (pyqtgraph), and a region selector to zoom known wavelength bands (Balmer lines, Fulcher, etc.).
+
+You can also drag-and-drop a `.nc` file onto the window to load it at any time.
+
+### Bundled demo dataset
+
+spectroview ships a compact demo cube (`193777_demo.nc`, ≈3 MB) derived from a real echelle
+measurement.  It covers 400–700 nm (Hδ, Hγ, BH, Hβ, Fulcher, Hα) over 20 frames.
+Running `spectroview` with no arguments opens this cube automatically.
+
+```python
+from spectroview.examples import get_example_cube_path
+from spectroview import open_cube
+
+cube = open_cube(get_example_cube_path())
+```
 
 ### Python API
 

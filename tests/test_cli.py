@@ -34,14 +34,17 @@ def test_cli_file_not_found(capsys):
     assert "file not found" in err
 
 
-def test_cli_no_args_launches_gui(monkeypatch):
+def test_cli_no_args_launches_gui_with_demo(monkeypatch):
     import spectroview.gui.app as app_module
+    from spectroview.examples import get_example_cube_path
 
     calls: list = []
     monkeypatch.setattr(app_module, "run_gui", lambda path: calls.append(path) or 0)
     code = main([])
     assert code == 0
-    assert calls == [None]
+    assert len(calls) == 1
+    # No explicit path → demo cube is passed automatically
+    assert calls[0] == get_example_cube_path()
 
 
 def test_cli_with_file_launches_gui(monkeypatch, tmp_path):
