@@ -10,10 +10,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QSlider,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
 
+from spectroview.gui.quicklook_maps import QuicklookMapsPanel
 from spectroview.model import SpectroCubeViewModel
 from spectroview.regions import WavelengthRegion, available_regions
 
@@ -29,12 +31,12 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
+        outer = QVBoxLayout(central)
 
         self._meta_label = QLabel(self._metadata_text())
         self._meta_label.setWordWrap(True)
         self._meta_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        layout.addWidget(self._meta_label)
+        outer.addWidget(self._meta_label)
 
         slider_row = QHBoxLayout()
         slider_row.addWidget(QLabel("Frame:"))
@@ -46,7 +48,7 @@ class MainWindow(QMainWindow):
         slider_row.addWidget(self._frame_slider, stretch=1)
         self._frame_label = QLabel("0")
         slider_row.addWidget(self._frame_label)
-        layout.addLayout(slider_row)
+        outer.addLayout(slider_row)
 
         region_row = QHBoxLayout()
         region_row.addWidget(QLabel("Region:"))
@@ -57,17 +59,31 @@ class MainWindow(QMainWindow):
             self._region_combo.addItem(region.name, region)
         self._region_combo.currentIndexChanged.connect(self._on_region_changed)
         region_row.addWidget(self._region_combo, stretch=1)
-        layout.addLayout(region_row)
+        outer.addLayout(region_row)
 
+        splitter = QSplitter(Qt.Orientation.Vertical)
+
+        spectrum_host = QWidget()
+        spectrum_layout = QVBoxLayout(spectrum_host)
+        spectrum_layout.setContentsMargins(0, 0, 0, 0)
         self._plot = pg.PlotWidget()
         self._plot.setLabel("bottom", "Wavelength", units="nm")
         units = cube.attrs.get("intensity_units", "")
         self._plot.setLabel("left", "Intensity", units=units)
         self._plot.showGrid(x=True, y=True, alpha=0.3)
         self._curve = self._plot.plot()
-        layout.addWidget(self._plot, stretch=1)
+        spectrum_layout.addWidget(self._plot)
+        splitter.addWidget(spectrum_host)
 
-        self._update_spectrum()
+        self._quicklook = QuicklookMapsPanel(cube)
+        self._quicklook.frame_clicked.connect(self._on_map_frame_clicked)
+        splitter.addWidget(self._quicklook)
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 1)
+
+        outer.addWidget(splitter, stretch=1)
+
+        self._update_frame_display(0)
 
     def _metadata_text(self) -> str:
         cube = self._cube
@@ -91,11 +107,21 @@ class MainWindow(QMainWindow):
         return self._region_combo.currentData()
 
     def _on_frame_changed(self, frame: int) -> None:
-        self._frame_label.setText(str(frame))
-        self._update_spectrum()
+        self._update_frame_display(frame)
+
+    def _on_map_frame_clicked(self, frame: int) -> None:
+        self._frame_slider.blockSignals(True)
+        self._frame_slider.setValue(frame)
+        self._frame_slider.blockSignals(False)
+        self._update_frame_display(frame)
 
     def _on_region_changed(self, _index: int) -> None:
         self._update_spectrum()
+
+    def _update_frame_display(self, frame: int) -> None:
+        self._frame_label.setText(str(frame))
+        self._update_spectrum()
+        self._quicklook.set_frame(frame)
 
     def _update_spectrum(self) -> None:
         frame = self._current_frame()
