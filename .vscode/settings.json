@@ -1,0 +1,10 @@
+{
+  "python.defaultInterpreterPath": "${userHome}/.venvs/spectroview/bin/python",
+  "python.venvPath": "${userHome}/.venvs",
+  "python.testing.pytestEnabled": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "editor.rulers": [100],
+  "files.exclude": {
+    "**/__pycache__": true
+  }
+}
