@@ -56,7 +56,7 @@ Issues = "https://github.com/queezz/spectroview/issues"
 where = ["src"]
 
 [tool.setuptools.package-data]
-spectroview = ["data/*.nc"]
+spectroview = ["assets/*.svg", "data/*.nc"]
 
 [tool.black]
 line-length = 100
