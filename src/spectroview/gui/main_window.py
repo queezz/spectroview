@@ -24,6 +24,18 @@ from spectroview.model import SpectroCubeViewModel
 from spectroview.regions import WavelengthRegion, available_regions
 
 
+def _region_combo_index(
+    regions: list[WavelengthRegion], selected_region_name: str | None
+) -> int:
+    if selected_region_name is None:
+        return 0
+
+    for index, region in enumerate(regions, start=1):
+        if region.name == selected_region_name:
+            return index
+    return 0
+
+
 class MainWindow(QMainWindow):
     def __init__(self, cube: SpectroCubeViewModel | None = None) -> None:
         super().__init__()
@@ -127,6 +139,9 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------ #
 
     def _apply_cube(self, cube: SpectroCubeViewModel) -> None:
+        previous_region = self._selected_region()
+        previous_region_name = previous_region.name if previous_region is not None else None
+
         self._cube = cube
         filename = Path(cube.path).name if cube.path else "SpectroCube"
         self.setWindowTitle(f"SpectroView — {filename}")
@@ -145,8 +160,11 @@ class MainWindow(QMainWindow):
         self._region_combo.blockSignals(True)
         self._region_combo.clear()
         self._region_combo.addItem("Full spectrum", None)
-        for region in available_regions(*cube.wavelength_range):
+        regions = available_regions(*cube.wavelength_range)
+        for region in regions:
             self._region_combo.addItem(region.name, region)
+        restored_index = _region_combo_index(regions, previous_region_name)
+        self._region_combo.setCurrentIndex(restored_index)
         self._region_combo.setEnabled(True)
         self._region_combo.blockSignals(False)
 

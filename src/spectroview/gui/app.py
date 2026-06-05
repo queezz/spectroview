@@ -6,8 +6,8 @@ import sys
 from importlib.resources import as_file, files
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QCursor, QGuiApplication, QIcon
+from PySide6.QtWidgets import QApplication, QMainWindow
 
 from spectroview.gui.main_window import MainWindow
 from spectroview.io import open_cube
@@ -28,6 +28,18 @@ def _set_windows_app_user_model_id() -> None:
     windll.shell32.SetCurrentProcessExplicitAppUserModelID("queezz.spectroview")
 
 
+def center_on_current_screen(window: QMainWindow) -> None:
+    screen = QGuiApplication.screenAt(QCursor.pos()) or window.screen()
+    if screen is None:
+        screen = QGuiApplication.primaryScreen()
+    if screen is None:
+        return
+
+    frame = window.frameGeometry()
+    frame.moveCenter(screen.availableGeometry().center())
+    window.move(frame.topLeft())
+
+
 def run_gui(path: Path | None) -> int:
     _set_windows_app_user_model_id()
     app = QApplication(sys.argv)
@@ -39,4 +51,5 @@ def run_gui(path: Path | None) -> int:
         window = MainWindow()
     window.setWindowIcon(app.windowIcon())
     window.show()
+    center_on_current_screen(window)
     return app.exec()
