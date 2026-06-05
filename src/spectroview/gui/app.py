@@ -19,7 +19,17 @@ def application_icon() -> QIcon:
         return QIcon(str(icon_path))
 
 
+def _set_windows_app_user_model_id() -> None:
+    if sys.platform != "win32":
+        return
+
+    from ctypes import windll
+
+    windll.shell32.SetCurrentProcessExplicitAppUserModelID("queezz.spectroview")
+
+
 def run_gui(path: Path | None) -> int:
+    _set_windows_app_user_model_id()
     app = QApplication(sys.argv)
     app.setWindowIcon(application_icon())
     if path is not None:
