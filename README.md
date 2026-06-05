@@ -77,8 +77,8 @@ Use `~/.venvs/spectroview` (or `%USERPROFILE%\.venvs\spectroview` on Windows). D
 ```bash
 python3 -m venv ~/.venvs/spectroview
 source ~/.venvs/spectroview/bin/activate
-pip install -e ".[dev]"
 pip install -e ../2026-spectrocube
+pip install -e ".[dev]"
 pip install -e ../echelle_spectra
 ```
 
@@ -87,8 +87,8 @@ pip install -e ../echelle_spectra
 ```powershell
 python -m venv $env:USERPROFILE\.venvs\spectroview
 & $env:USERPROFILE\.venvs\spectroview\Scripts\Activate.ps1
-pip install -e ".[dev]"
 pip install -e ..\2026-spectrocube
+pip install -e ".[dev]"
 pip install -e ..\echelle_spectra
 ```
 
